@@ -37,7 +37,7 @@ ROOT.RooMCStudy(model, ROOT.RooArgSet(x), FitOptions=dict(Save=True, PrintEvalEr
 */
 """
 
-from ._utils import _kwargs_to_roocmdargs, _string_to_root_attribute
+from ._utils import _kwargs_to_roocmdargs, _string_to_root_attribute, _dict_to_std_map
 
 
 # Color and Style dictionary to define matplotlib conventions
@@ -115,6 +115,72 @@ def ZVar(*args, **kwargs):
         del kwargs["var"]
     args, kwargs = _kwargs_to_roocmdargs(*args, **kwargs)
     return RooFit._ZVar(*args, **kwargs)
+
+
+def Slice(*args, **kwargs):
+    # Redefinition of `Slice` for keyword arguments and converting python dict to std::map.
+    # The keywords must correspond to the CmdArg of the `Slice` function.
+    # The instances in the dict must correspond to the template argument in std::map of the `Slice` function.
+    from cppyy.gbl import RooFit
+
+    for i, arg_dict in enumerate(args):
+        if isinstance(arg_dict, dict):
+            args = list(args)
+            args[i] = _dict_to_std_map(arg_dict, "RooCategory*, std::string")
+
+    return RooFit._Slice(*args, **kwargs)
+
+
+def Import(*args, **kwargs):
+    # Redefinition of `Import` for keyword arguments and converting python dict to std::map.
+    # The keywords must correspond to the CmdArg of the `Import` function.
+    # The instances in the dict must correspond to the template argument in std::map of the `Import` function.
+    from cppyy.gbl import RooFit
+
+    def all_values_of_class(d, klass):
+        return all([isinstance(v, klass) for v in d.values()])
+
+    def _get_template_args(import_dict):
+        import ROOT
+
+        if all_values_of_class(import_dict, ROOT.RooDataSet):
+            value_class_name = "RooDataSet"
+        elif all_values_of_class(import_dict, ROOT.RooDataHist):
+            value_class_name = "RooDataHist"
+        elif all_values_of_class(import_dict, ROOT.TH1):
+            value_class_name = "TH1"
+        else:
+            raise TypeError(
+                """Unsupported value types in dictionary passed to RooFit.Import(import_dict). The imported objects need to be either:
+                * all instances of RooDataSet
+                * all instances of RooDataHist
+                * all instances of TH1"""
+            )
+
+        return "std::string," + value_class_name + "*"
+
+    for i, arg_dict in enumerate(args):
+        if isinstance(arg_dict, dict):
+            template_arg = _get_template_args(arg_dict)
+            args = list(args)
+            args[i] = _dict_to_std_map(arg_dict, template_arg)
+
+    args, kwargs = _kwargs_to_roocmdargs(*args, **kwargs)
+    return RooFit._Import(*args, **kwargs)
+
+
+def Link(*args, **kwargs):
+    # Redefinition of `Link` for keyword arguments and converting python dict to std::map.
+    # The keywords must correspond to the CmdArg of the `Link` function.
+    # The instances in the dict must correspond to the template argument in std::map of the `Link` function.
+    from cppyy.gbl import RooFit
+
+    for i, arg_dict in enumerate(args):
+        if isinstance(arg_dict, dict):
+            args = list(args)
+            args[i] = _dict_to_std_map(arg_dict, "std::string, RooAbsData*")
+
+    return RooFit._Link(*args, **kwargs)
 
 
 def LineColor(color):
