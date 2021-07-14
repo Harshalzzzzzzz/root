@@ -151,7 +151,10 @@ def Import(*args, **kwargs):
             value_class_name = "TH1"
         else:
             raise TypeError(
-                """Unsupported value types in dictionary passed to RooFit.Import(import_dict). The imported objects need to be either: * all instances of RooDataSet * all instances of RooDataHist * all instances of TH1"""
+                """Unsupported value types in dictionary passed to RooFit.Import(import_dict). The imported objects need to be either:
+  * all instances of RooDataSet
+  * all instances of RooDataHist
+  * all instances of TH1"""
             )
 
         return "std::string," + value_class_name + "*"
